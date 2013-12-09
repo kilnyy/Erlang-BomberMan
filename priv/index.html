@@ -1,0 +1,75 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    <title>Websocket client</title>
+    <script src="/static/jquery.min.js"></script>
+    <script type="text/javascript">
+      
+    var websocket;
+    $(document).ready(init);
+    
+    function init() {
+      if(!("WebSocket" in window)){  
+        console.log("websocket do not support");
+      } else {
+        connect();
+      };
+    };
+
+    function connect()
+    {
+      wsHost = "ws://localhost:2333/websocket"
+      websocket = new WebSocket(wsHost);
+      websocket.onopen = function(evt) { onOpen(evt) }; 
+      websocket.onclose = function(evt) { onClose(evt) }; 
+      websocket.onmessage = function(evt) { onMessage(evt) }; 
+      websocket.onerror = function(evt) { onError(evt) }; 
+    };  
+    
+    function send(data) {
+      var txt = JSON.stringify(data);
+      if(websocket.readyState == websocket.OPEN){
+        websocket.send(txt);
+        console.log('sending: ' + txt); 
+      } else {
+         console.log('websocket is not connected'); 
+      };
+    };
+
+    function onOpen(evt) { 
+      console.log("connected");
+    };  
+
+    function onClose(evt) { 
+      console.log("disconnected");
+    };  
+
+    function onMessage(evt) { 
+      console.log("receive: " + evt.data);
+    };  
+
+    function onError(evt) {
+      console.log("error: " + evt.data);
+    };
+
+    document.onkeypress = function(event) {
+      var dx, dy;
+      if (event.which == 'a'.charCodeAt(0) || event.which == 'd'.charCodeAt(0)) {
+        dx = (event.which == 'a'.charCodeAt(0)) ? -1 : 1;
+      } else {
+        dx = 0;
+      }
+      if (event.which == 'w'.charCodeAt(0) || event.which == 's'.charCodeAt(0)) {
+        dy = (event.which == 'w'.charCodeAt(0)) ? -1 : 1;
+      } else {
+        dy = 0;
+      }
+      send(["player", 0, 0, dx, dy]);
+    }
+
+    </script>
+  </head>
+
+  <body>
+  </body>
+</html> 

@@ -1,0 +1,12 @@
+.erlang*
+ebin/
+.DS_Store
+deps
+.eunit
+*.o
+*.beam
+*.plt
+erl_crash.dump
+_rel
+relx
+*.swp
