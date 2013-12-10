@@ -10,7 +10,7 @@ receive_loop(Client, Id, X, Y, Dx, Dy) ->
     receive
         {disconnect} ->
             ok;
-        {move, [Nx, Ny, NDx, NDy]} ->
+        {move, [Nx, Ny, NDx, NDy, _TimeStamp]} ->
             receive_loop(Client, Id, Nx, Ny, NDx, NDy);
         {run} ->
             game_manager ! {player_state, Client, Id, X+Dx, Y+Dy, Dx, Dy},

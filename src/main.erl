@@ -18,19 +18,25 @@ loop(Clients) ->
             Params = json:decode(Msg),
             io:format("~p~n", [Params]),
             case Params of
-                [<<"player">>, <<"move">>, _X, _Y, _Dx, _Dy] ->
-                    game_manager ! {player, Client, tl(Params)}
+                [<<"player">>, <<"move">>, _X, _Y, _Dx, _Dy, _TimeStamp] ->
+                    game_manager ! {player, Client, tl(Params)};
+                [<<"time">>, TimeStamp] ->
+                    emit(Client, [<<"time">>, TimeStamp])
             end,
             loop(Clients)
     end.
 
+current() ->
+    {H, S, M} = erlang:now(),
+    H * 1000000 * 1000 + S * 1000 + (M rem 1000).
+
 emit(Client, Msg) ->
-    Client ! {self(), Msg}.
+    Client ! {self(), json:encode(Msg ++ [current()])}.
 
 broadcast([], _Msg) ->
     ok;
 broadcast([Client | Tail], Msg) ->
-    Client ! {self(), Msg},
+    emit(Client, Msg),
     broadcast(Tail, Msg);
 broadcast(Clients, Msg) ->
     broadcast(gb_sets:to_list(Clients), Msg).

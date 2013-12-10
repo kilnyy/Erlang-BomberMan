@@ -60,7 +60,7 @@
             players[i].run();
           }
       }
-      var stop = setInterval(run, 60);
+      var stop = setInterval(run, 100);
       canvas.width = width;
       canvas.height = height;
     };
@@ -77,6 +77,7 @@
     };  
     
     function send(data) {
+      data.push(new Date().getTime());
       var txt = JSON.stringify(data);
       if(websocket.readyState == websocket.OPEN){
         websocket.send(txt);
@@ -125,7 +126,12 @@
       } else {
         dy = 0;
       }
-      if (dx || dy) {player.move(dx, dy); send(["player", "move", player.x, player.y, dx, dy]);}
+      if (dx || dy) {
+        dx *= 0.3;
+        dy *= 0.3;
+        player.move(dx, dy);
+        send(["player", "move", player.x, player.y, dx, dy]);
+      }
     }
 
     document.onkeyup = function(event) {

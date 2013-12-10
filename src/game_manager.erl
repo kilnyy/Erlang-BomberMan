@@ -21,11 +21,11 @@ loop(ClientsDict) ->
             loop(ClientsDict);
         {player_state, _Client, Id, X, Y, Dx, Dy} ->
             Clients = dict:fetch_keys(ClientsDict),
-            Msg = json:encode([<<"player">>, <<"move">>, Id, X, Y, Dx, Dy]),
+            Msg = [<<"player">>, <<"move">>, Id, X, Y, Dx, Dy],
             main:broadcast(Clients, Msg),
             loop(ClientsDict);
         {player_init, Client, Id} ->
-            Msg = json:encode([<<"player">>, <<"init">>, Id]),
+            Msg = [<<"player">>, <<"init">>, Id],
             main:emit(Client, Msg),
             loop(ClientsDict);
 
