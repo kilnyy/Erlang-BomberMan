@@ -7,6 +7,35 @@
       
     var websocket;
     $(document).ready(init);
+    var players = {};
+    var grid = 10;
+    var width = 800;
+    var height = 600;
+
+    function Player(id, x, y, dx, dy) {
+      this.id = id;
+      this.x = x;
+      this.y = y;
+      this.dx = dx;
+      this.dy = dy;
+      players[this.id] = this;
+
+      this.run = function() {
+        this.x = this.x + this.dx;
+        this.y = this.y + this.dy;
+        context.fillStyle="#eee";
+        context.fillRect(this.x*grid + width/2 - grid/2, this.y*grid + height/2 - grid/2, grid, grid);
+      }
+
+      this.move = function(dx, dy, x, y) {
+        this.dx = dx;
+        this.dy = dy;
+        if (player && this != player) {
+          this.x = x;
+          this.y = y;
+        }
+      }
+    }
     
     function init() {
       if(!("WebSocket" in window)){  
@@ -14,11 +43,32 @@
       } else {
         connect();
       };
+
+      canvas=document.getElementById("canvas");
+      context=canvas.getContext('2d');
+
+
+      function drawBackground() {
+        context.clearRect(0, 0, width, height);
+        context.fillStyle="#000";
+        context.fillRect(0, 0, width, height);
+      }
+
+      var run = function() {
+          drawBackground();
+          for (var i in players) {
+            players[i].run();
+          }
+      }
+      var stop = setInterval(run, 60);
+      canvas.width = width;
+      canvas.height = height;
     };
 
     function connect()
     {
-      wsHost = "ws://localhost:2333/websocket"
+      var url = location.href;
+      wsHost = url.replace('http:', 'ws:') + 'websocket';
       websocket = new WebSocket(wsHost);
       websocket.onopen = function(evt) { onOpen(evt) }; 
       websocket.onclose = function(evt) { onClose(evt) }; 
@@ -45,31 +95,52 @@
     };  
 
     function onMessage(evt) { 
-      console.log("receive: " + evt.data);
+    console.log("receive: " + evt.data);
+        data = JSON.parse(evt.data);
+      if (data[0] == 'player' && data[1] == 'move') {
+        id = data[2]; x = data[3]; y = data[4]; dx = data[5]; dy = data[6];
+        if (players[id]) players[id].move(dx, dy, x, y);
+        else new Player(id, x, y, dx, dy);
+      }
+      if (data[0] == 'player' && data[1] == 'init') {
+        id = data[2];
+        player = new Player(id, 0, 0, 0, 0);
+      }
     };  
 
     function onError(evt) {
       console.log("error: " + evt.data);
     };
 
-    document.onkeypress = function(event) {
+    document.onkeydown = function(event) {
+      if (!player) return;
       var dx, dy;
-      if (event.which == 'a'.charCodeAt(0) || event.which == 'd'.charCodeAt(0)) {
-        dx = (event.which == 'a'.charCodeAt(0)) ? -1 : 1;
+      if (event.which == 'A'.charCodeAt(0) || event.which == 'D'.charCodeAt(0)) {
+        dx = (event.which == 'A'.charCodeAt(0)) ? -1 : 1;
       } else {
         dx = 0;
       }
-      if (event.which == 'w'.charCodeAt(0) || event.which == 's'.charCodeAt(0)) {
-        dy = (event.which == 'w'.charCodeAt(0)) ? -1 : 1;
+      if (event.which == 'W'.charCodeAt(0) || event.which == 'S'.charCodeAt(0)) {
+        dy = (event.which == 'W'.charCodeAt(0)) ? -1 : 1;
       } else {
         dy = 0;
       }
-      send(["player", 0, 0, dx, dy]);
+      if (dx || dy) {player.move(dx, dy); send(["player", "move", player.x, player.y, dx, dy]);}
+    }
+
+    document.onkeyup = function(event) {
+      if (!player) return;
+      if (event.which == 'A'.charCodeAt(0) || event.which == 'D'.charCodeAt(0) 
+          || event.which == 'W'.charCodeAt(0) || event.which == 'S'.charCodeAt(0)) {
+        player.move(0, 0);
+        send(["player", "move", player.x, player.y, 0, 0]);
+      }
     }
 
     </script>
   </head>
 
-  <body>
+  <body style="  margin: 50px auto;width: 800px; ">
+    <canvas id="canvas"></canvas>
   </body>
 </html> 

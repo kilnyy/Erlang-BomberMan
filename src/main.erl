@@ -16,8 +16,9 @@ loop(Clients) ->
             loop(gb_sets:delete(Client, Clients));
         {message, Client, Msg} ->
             Params = json:decode(Msg),
+            io:format("~p~n", [Params]),
             case Params of
-                [<<"player">>, _X, _Y, _Dx, _Dy] ->
+                [<<"player">>, <<"move">>, _X, _Y, _Dx, _Dy] ->
                     game_manager ! {player, Client, tl(Params)}
             end,
             loop(Clients)

@@ -1,17 +1,18 @@
 -module(player).
 
--export([start/1]).
+-export([start/2]).
 
-start(Id) ->
-    receive_loop(Id, 0, 0, 0, 0).
+start(Client, Id) ->
+    game_manager ! {player_init, Client, Id},
+    receive_loop(Client, Id, 0, 0, 0, 0).
 
-receive_loop(Id, X, Y, Dx, Dy) ->
+receive_loop(Client, Id, X, Y, Dx, Dy) ->
     receive
         {disconnect} ->
             ok;
-        {move, [_X, _Y, Nx, Ny]} ->
-            receive_loop(Id, X, Y, Nx, Ny);
+        {move, [Nx, Ny, NDx, NDy]} ->
+            receive_loop(Client, Id, Nx, Ny, NDx, NDy);
         {run} ->
-            game_manager ! {player_state, Id, X+Dx, Y+Dy, Dx, Dy},
-            receive_loop(Id, X+Dx, Y+Dy, Dx, Dy)
+            game_manager ! {player_state, Client, Id, X+Dx, Y+Dy, Dx, Dy},
+            receive_loop(Client, Id, X+Dx, Y+Dy, Dx, Dy)
     end.
