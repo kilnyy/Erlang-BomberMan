@@ -118,7 +118,7 @@
         send(['time']);
       }
       if (data[0] == 'time') {
-        delayTime = parseInt((curTime() - data[1]) / 2);
+        delayTime = parseInt(data[2] - curTime()*1.5 + data[1]*0.5);
         console.log("delay:" + delayTime);
       }
     };  
