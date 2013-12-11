@@ -11,6 +11,7 @@
     var grid = 10;
     var width = 800;
     var height = 600;
+    var interval = 40;
 
     function Player(id, x, y, dx, dy) {
       this.id = id;
@@ -21,8 +22,8 @@
       players[this.id] = this;
 
       this.run = function() {
-        this.x = this.x + this.dx;
-        this.y = this.y + this.dy;
+        this.x = this.x + this.dx * interval / 1000;
+        this.y = this.y + this.dy * interval / 1000;
         context.fillStyle="#eee";
         context.fillRect(this.x*grid + width/2 - grid/2, this.y*grid + height/2 - grid/2, grid, grid);
       }
@@ -60,7 +61,7 @@
             players[i].run();
           }
       }
-      var stop = setInterval(run, 100);
+      var stop = setInterval(run, interval);
       canvas.width = width;
       canvas.height = height;
     };
@@ -127,8 +128,8 @@
         dy = 0;
       }
       if (dx || dy) {
-        dx *= 0.3;
-        dy *= 0.3;
+        dx *= 5;
+        dy *= 5;
         player.move(dx, dy);
         send(["player", "move", player.x, player.y, dx, dy]);
       }

@@ -13,6 +13,6 @@ receive_loop(Client, Id, X, Y, Dx, Dy) ->
         {move, [Nx, Ny, NDx, NDy, _TimeStamp]} ->
             receive_loop(Client, Id, Nx, Ny, NDx, NDy);
         {run} ->
-            game_manager ! {player_state, Client, Id, X+Dx, Y+Dy, Dx, Dy},
-            receive_loop(Client, Id, X+Dx, Y+Dy, Dx, Dy)
+            game_manager ! {player_state, Client, Id, X+Dx/10, Y+Dy/10, Dx, Dy},
+            receive_loop(Client, Id, X+Dx/10, Y+Dy/10, Dx, Dy)
     end.
