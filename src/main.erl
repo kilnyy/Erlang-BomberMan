@@ -1,6 +1,6 @@
 -module(main).
 
--export([start/0, emit/2, broadcast/2]).
+-export([start/0, emit/2, broadcast/2, current/0]).
 
 start() ->
     register(game_manager, spawn(game_manager, start, [])),

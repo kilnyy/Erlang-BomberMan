@@ -12,6 +12,7 @@
     var width = 800;
     var height = 600;
     var interval = 40;
+    var delayTime = 0;
 
     function Player(id, x, y, dx, dy) {
       this.id = id;
@@ -28,12 +29,13 @@
         context.fillRect(this.x*grid + width/2 - grid/2, this.y*grid + height/2 - grid/2, grid, grid);
       }
 
-      this.move = function(dx, dy, x, y) {
+      this.move = function(dx, dy, x, y, timestamp) {
         this.dx = dx;
         this.dy = dy;
         if (player && this != player) {
-          this.x = x;
-          this.y = y;
+          cur = curTime();
+          this.x = x + dx * (cur - timestamp) / 1000;
+          this.y = y + dy * (cur - timestamp) / 1000;
         }
       }
     }
@@ -76,9 +78,13 @@
       websocket.onmessage = function(evt) { onMessage(evt) }; 
       websocket.onerror = function(evt) { onError(evt) }; 
     };  
+
+    function curTime() {
+      return new Date().getTime() + delayTime;
+    }
     
     function send(data) {
-      data.push(new Date().getTime());
+      data.push(curTime());
       var txt = JSON.stringify(data);
       if(websocket.readyState == websocket.OPEN){
         websocket.send(txt);
@@ -101,12 +107,17 @@
         data = JSON.parse(evt.data);
       if (data[0] == 'player' && data[1] == 'move') {
         id = data[2]; x = data[3]; y = data[4]; dx = data[5]; dy = data[6];
-        if (players[id]) players[id].move(dx, dy, x, y);
+        timestamp = data[7];
+        if (players[id]) players[id].move(dx, dy, x, y, timestamp);
         else new Player(id, x, y, dx, dy);
       }
       if (data[0] == 'player' && data[1] == 'init') {
         id = data[2];
         player = new Player(id, 0, 0, 0, 0);
+        send(['time']);
+      }
+      if (data[0] == 'time') {
+        delayTime = parseInt((curTime() - data[1]) / 2);
       }
     };  
 
