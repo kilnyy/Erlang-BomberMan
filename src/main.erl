@@ -27,8 +27,8 @@ loop(Clients) ->
     end.
 
 current() ->
-    {H, S, M} = erlang:now(),
-    H * 1000000 * 1000 + S * 1000 + (M rem 1000).
+    {H, S, M} = os:timestamp(),
+    H * 1000000 * 1000 + S * 1000 + (M div 1000).
 
 emit(Client, Msg) ->
     Client ! {self(), json:encode(Msg ++ [current()])}.

@@ -34,6 +34,7 @@
         this.dy = dy;
         if (player && this != player) {
           cur = curTime();
+          console.log(cur - timestamp);
           this.x = x + dx * (cur - timestamp) / 1000;
           this.y = y + dy * (cur - timestamp) / 1000;
         }
@@ -88,7 +89,7 @@
       var txt = JSON.stringify(data);
       if(websocket.readyState == websocket.OPEN){
         websocket.send(txt);
-        console.log('sending: ' + txt); 
+        //console.log('sending: ' + txt); 
       } else {
          console.log('websocket is not connected'); 
       };
@@ -103,7 +104,7 @@
     };  
 
     function onMessage(evt) { 
-    console.log("receive: " + evt.data);
+    //console.log("receive: " + evt.data);
         data = JSON.parse(evt.data);
       if (data[0] == 'player' && data[1] == 'move') {
         id = data[2]; x = data[3]; y = data[4]; dx = data[5]; dy = data[6];
@@ -118,6 +119,7 @@
       }
       if (data[0] == 'time') {
         delayTime = parseInt((curTime() - data[1]) / 2);
+        console.log("delay:" + delayTime);
       }
     };  
 
