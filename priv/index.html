@@ -8,10 +8,10 @@
     var websocket;
     $(document).ready(init);
     var players = {};
-    var grid = 10;
+    var grid = 20;
     var width = 800;
     var height = 600;
-    var interval = 40;
+    var interval = 20;
     var delayTime = 0;
 
     function Player(id, x, y, dx, dy) {
@@ -32,12 +32,11 @@
       this.move = function(dx, dy, x, y, timestamp) {
         this.dx = dx;
         this.dy = dy;
-        if (player && this != player) {
+        //if (player && this != player) {
           cur = curTime();
-          console.log(cur - timestamp);
           this.x = x + dx * (cur - timestamp) / 1000;
           this.y = y + dy * (cur - timestamp) / 1000;
-        }
+        //}
       }
     }
     
@@ -127,34 +126,42 @@
       console.log("error: " + evt.data);
     };
 
-    document.onkeydown = function(event) {
+    var pressed = [];
+
+    function code(x) {
+      return x.charCodeAt(0);
+    }
+
+    function findDirection() {
       if (!player) return;
-      var dx, dy;
-      if (event.which == 'A'.charCodeAt(0) || event.which == 'D'.charCodeAt(0)) {
-        dx = (event.which == 'A'.charCodeAt(0)) ? -1 : 1;
-      } else {
-        dx = 0;
+      var dx = 0, dy = 0;
+      if (pressed.length > 0) {
+        var op = pressed[pressed.length-1];
+        if (op == code('A')) dx = -1;
+        if (op == code('D')) dx = 1;
+        if (op == code('W')) dy = -1;
+        if (op == code('S')) dy = 1;
       }
-      if (event.which == 'W'.charCodeAt(0) || event.which == 'S'.charCodeAt(0)) {
-        dy = (event.which == 'W'.charCodeAt(0)) ? -1 : 1;
-      } else {
-        dy = 0;
-      }
-      if (dx || dy) {
-        dx *= 5;
-        dy *= 5;
-        player.move(dx, dy);
-        send(["player", "move", player.x, player.y, dx, dy]);
-      }
+
+      dx *= 10;
+      dy *= 10;
+      send(["player", "move", player.x, player.y, dx, dy]);
+      //setTimeout(player.move(dx, dy), 40);
+    }
+
+    document.onkeydown = function(event) {
+      if ($.inArray(event.which, pressed) != -1) return;
+      if (event.which != code('A') && event.which != code('S')
+          && event.which != code('D') && event.which != code('W'))
+        return;
+      pressed.push(event.which);
+      findDirection();
     }
 
     document.onkeyup = function(event) {
-      if (!player) return;
-      if (event.which == 'A'.charCodeAt(0) || event.which == 'D'.charCodeAt(0) 
-          || event.which == 'W'.charCodeAt(0) || event.which == 'S'.charCodeAt(0)) {
-        player.move(0, 0);
-        send(["player", "move", player.x, player.y, 0, 0]);
-      }
+      if ($.inArray(event.which, pressed) == -1) return;
+      pressed.splice( $.inArray(event.which, pressed), 1);
+      findDirection();
     }
 
     </script>
