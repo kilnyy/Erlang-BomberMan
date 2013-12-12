@@ -32,11 +32,11 @@
       this.move = function(dx, dy, x, y, timestamp) {
         this.dx = dx;
         this.dy = dy;
-        //if (player && this != player) {
+        if (player && this != player) {
           cur = curTime();
           this.x = x + dx * (cur - timestamp) / 1000;
           this.y = y + dy * (cur - timestamp) / 1000;
-        //}
+        }
       }
     }
     
@@ -103,7 +103,7 @@
     };  
 
     function onMessage(evt) { 
-    //console.log("receive: " + evt.data);
+    console.log("receive: " + evt.data + " " + curTime());
         data = JSON.parse(evt.data);
       if (data[0] == 'player' && data[1] == 'move') {
         id = data[2]; x = data[3]; y = data[4]; dx = data[5]; dy = data[6];
@@ -117,7 +117,7 @@
         send(['time']);
       }
       if (data[0] == 'time') {
-        delayTime = parseInt(data[2] - curTime()*1.5 + data[1]*0.5);
+        delayTime = parseInt(data[2] - curTime()*0.5 - data[1]*0.5);
         console.log("delay:" + delayTime);
       }
     };  
@@ -143,9 +143,10 @@
         if (op == code('S')) dy = 1;
       }
 
-      dx *= 10;
-      dy *= 10;
+      dx *= 5;
+      dy *= 5;
       send(["player", "move", player.x, player.y, dx, dy]);
+      player.move(dx, dy);
       //setTimeout(player.move(dx, dy), 40);
     }
 
