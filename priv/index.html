@@ -34,8 +34,15 @@
         this.dy = dy;
         if (player && this != player) {
           cur = curTime();
-          this.x = x + dx * (cur - timestamp) / 1000;
-          this.y = y + dy * (cur - timestamp) / 1000;
+          if ((x-this.x)*(x-this.x) + (y-this.y)*(y-this.y) <= 100) {
+            var nx = x + dx * (cur - timestamp + 500) / 1000;
+            var ny = y + dy * (cur - timestamp + 500) / 1000;
+            this.dx = (nx - this.x)/0.5;
+            this.dy = (ny - this.y)/0.5;
+          } else {
+            this.x = x + dx * (cur - timestamp) / 1000;
+            this.y = y + dy * (cur - timestamp) / 1000;
+          }
         }
       }
     }
