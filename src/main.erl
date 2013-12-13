@@ -16,10 +16,12 @@ loop(Clients) ->
             loop(gb_sets:delete(Client, Clients));
         {message, Client, Msg} ->
             Params = json:decode(Msg),
-            io:format("~p~n", [Params]),
+            io:format("receive: ~p~n", [Params]),
             case Params of
                 [<<"player">>, <<"move">>, _X, _Y, _Dx, _Dy, _TimeStamp] ->
                     game_manager ! {player, Client, tl(Params)};
+                [<<"bomb">>, <<"set">>, _X, _Y, _Timestamp] ->
+                    game_manager ! {bomb, Client, tl(Params)}; 
                 [<<"time">>, TimeStamp] ->
                     emit(Client, [<<"time">>, TimeStamp])
             end,

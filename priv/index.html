@@ -8,11 +8,42 @@
     var websocket;
     $(document).ready(init);
     var players = {};
+    var bombs = {};
     var grid = 20;
     var width = 800;
     var height = 600;
     var interval = 20;
     var delayTime = 0;
+
+    function Bomb(id, x, y, r) {
+      this.id = id;
+      this.x = x;
+      this.y = y;
+      this.r = r;
+      this.fire = false;
+      bombs[this.id] = this;
+
+      this.run = function() {
+        if (!this.fire) {
+          context.fillStyle="e00";
+          context.beginPath();
+          context.arc(this.x*grid + width/2, this.y*grid + height/2, grid/2, 0, Math.PI*2, true); 
+          context.closePath();
+          context.fill();
+        } else {
+          context.fillStyle="e00";
+          context.fillRect((this.x-this.r)*grid + width/2 - grid/2, this.y*grid + height/2 - grid/2, grid*(2*this.r+1), grid);
+          context.fillRect(this.x*grid + width/2 - grid/2, (this.y-this.r)*grid + height/2 - grid/2, grid, grid*(2*this.r+1));
+        }
+      }
+      this.bang = function() {
+        this.fire = true;
+        setTimeout(function(id) {
+          console.log(id);
+          delete bombs[id];
+        }, 500, this.id);
+      }
+    }
 
     function Player(id, x, y, dx, dy) {
       this.id = id;
@@ -37,14 +68,13 @@
           var nx = x + dx * (cur - timestamp) / 1000;
           var ny = y + dy * (cur - timestamp) / 1000;
           var dis = (nx-this.x)*(nx-this.x) + (ny-this.y)*(ny-this.y);
-          console.log(dis);
           if (dis <= 9 && dis >= 0.1) {
             nx = x + dx * (cur - timestamp + 500) / 1000;
             ny = y + dy * (cur - timestamp + 500) / 1000;
             this.dx = (nx - this.x)/0.5;
             this.dy = (ny - this.y)/0.5;
             var speed = Math.sqrt(this.dx*this.dx + this.dy*this.dy);
-            if (speed > 0.001) {
+            if (speed > 0.001 && speed < 5) {
               this.dx = this.dx / speed * 5;
               this.dy = this.dy / speed * 5;
             }
@@ -75,9 +105,8 @@
 
       var run = function() {
           drawBackground();
-          for (var i in players) {
-            players[i].run();
-          }
+          for (var i in players) players[i].run();
+          for (var i in bombs) bombs[i].run();
       }
       var stop = setInterval(run, interval);
       canvas.width = width;
@@ -119,18 +148,38 @@
     };  
 
     function onMessage(evt) { 
-    console.log("receive: " + evt.data + " " + curTime());
-        data = JSON.parse(evt.data);
+      var data = JSON.parse(evt.data);
+      if (data[0] != 'player' && data[1] != 'move')
+        console.log("receive: " + evt.data);
+      if (data[0] == 'disconnect') {
+        var id = data[1];
+        delete players[id];
+      }
       if (data[0] == 'player' && data[1] == 'move') {
-        id = data[2]; x = data[3]; y = data[4]; dx = data[5]; dy = data[6];
-        timestamp = data[7];
+        var id = data[2]; 
+        var x = data[3]; 
+        var y = data[4]; 
+        var dx = data[5]; 
+        var dy = data[6];
+        var timestamp = data[7];
         if (players[id]) players[id].move(dx, dy, x, y, timestamp);
         else new Player(id, x, y, dx, dy);
       }
       if (data[0] == 'player' && data[1] == 'init') {
-        id = data[2];
+        var id = data[2];
         player = new Player(id, 0, 0, 0, 0);
         send(['time']);
+      }
+      if (data[0] == 'bomb' && data[1] == 'set') {
+        var id = data[2];
+        var x = data[3];
+        var y = data[4];
+        var r = data[5];
+        var bomb = new Bomb(id, x, y, r);
+      }
+      if (data[0] == 'bomb' && data[1] == 'bang') {
+        var id = data[2];
+        bombs[id].bang();
       }
       if (data[0] == 'time') {
         delayTime = parseInt(data[2] - curTime()*0.5 - data[1]*0.5);
@@ -173,6 +222,11 @@
         return;
       pressed.push(event.which);
       findDirection();
+    }
+
+    document.onkeypress = function(event) {
+      if (event.which == code(' '))
+        send(["bomb", "set", Math.round(player.x), Math.round(player.y)]);
     }
 
     document.onkeyup = function(event) {

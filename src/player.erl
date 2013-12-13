@@ -1,12 +1,12 @@
 -module(player).
 
--export([start/2]).
+-export([start/1]).
 
-start(Client, Id) ->
-    game_manager ! {player_init, Client, Id},
-    receive_loop(Client, Id, 0, 0, 0, 0).
+start(Client) ->
+    game_manager ! {player_init, Client},
+    loop(Client, 0, 0, 0, 0, 4, 0, 3).
 
-receive_loop(Client, Id, X, Y, Dx, Dy) ->
+loop(Client, X, Y, Dx, Dy, MaxBomb, CurBomb, Range) ->
     receive
         {disconnect} ->
             ok;
@@ -14,9 +14,19 @@ receive_loop(Client, Id, X, Y, Dx, Dy) ->
             Cur = main:current(),
             Rx = Nx + NDx * (Cur - TimeStamp) / 1000,
             Ry = Ny + NDy * (Cur - TimeStamp) / 1000,
-            game_manager ! {player_state, Client, Id, Rx, Ry, NDx, NDy},
-            receive_loop(Client, Id, Rx, Ry, NDx, NDy);
+            game_manager ! {player_state, Client, Rx, Ry, NDx, NDy},
+            loop(Client, Rx, Ry, NDx, NDy, MaxBomb, CurBomb, Range);
+        {bomb, set, [Bx, By, _TimeStamp]} ->
+            if
+                MaxBomb > CurBomb ->
+                    spawn(bomb, start, [self(), Bx, By, Range]),
+                    loop(Client, X, Y, Dx, Dy, MaxBomb, CurBomb+1, Range);
+                true ->
+                    loop(Client, X, Y, Dx, Dy, MaxBomb, CurBomb, Range)
+            end;
+        {bomb, bang} ->
+            loop(Client, X, Y, Dx, Dy, MaxBomb, CurBomb-1, Range);
         {run} ->
-            game_manager ! {player_state, Client, Id, X+Dx/10, Y+Dy/10, Dx, Dy},
-            receive_loop(Client, Id, X+Dx/10, Y+Dy/10, Dx, Dy)
+            game_manager ! {player_state, Client, X+Dx/10, Y+Dy/10, Dx, Dy},
+            loop(Client, X+Dx/10, Y+Dy/10, Dx, Dy, MaxBomb, CurBomb, Range)
     end.
