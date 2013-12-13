@@ -38,11 +38,16 @@
           var ny = y + dy * (cur - timestamp) / 1000;
           var dis = (nx-this.x)*(nx-this.x) + (ny-this.y)*(ny-this.y);
           console.log(dis);
-          if (dis <= 1000 && dis >= 0.05) {
+          if (dis <= 9 && dis >= 0.1) {
             nx = x + dx * (cur - timestamp + 500) / 1000;
             ny = y + dy * (cur - timestamp + 500) / 1000;
             this.dx = (nx - this.x)/0.5;
             this.dy = (ny - this.y)/0.5;
+            var speed = Math.sqrt(this.dx*this.dx + this.dy*this.dy);
+            if (speed > 0.001) {
+              this.dx = this.dx / speed * 5;
+              this.dy = this.dy / speed * 5;
+            }
           } else {
             this.x = nx;
             this.y = ny;
