@@ -14,6 +14,7 @@
     var height = 600;
     var interval = 20;
     var delayTime = 0;
+    var death = -1;
 
     function Bomb(id, x, y, r) {
       this.id = id;
@@ -102,10 +103,17 @@
         context.fillRect(0, 0, width, height);
       }
 
+      function drawFrontground() {
+        context.font="30px Arial";
+        context.fillStyle = '#fff';
+        context.fillText("Death: " + Math.max(death, 0), 20, 40);
+      }
+
       var run = function() {
           drawBackground();
           for (var i in players) players[i].run();
           for (var i in bombs) bombs[i].run();
+          drawFrontground();
       }
       var stop = setInterval(run, interval);
       canvas.width = width;
@@ -165,6 +173,7 @@
         else new Player(id, x, y, dx, dy);
       }
       if (data[0] == 'player' && data[1] == 'init') {
+        death ++;
         var id = data[2];
         player = new Player(id, 0, 0, 0, 0);
         send(['time']);
