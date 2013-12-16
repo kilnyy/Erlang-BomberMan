@@ -26,6 +26,14 @@ loop(Client, X, Y, Dx, Dy, MaxBomb, CurBomb, Range) ->
             end;
         {bomb, bang} ->
             loop(Client, X, Y, Dx, Dy, MaxBomb, CurBomb-1, Range);
+        {bomb, bang, Nx, Ny, Range} ->
+            Dis = max(abs(Nx-round(X)), abs(Ny-round(Y))),
+            if
+                (Nx == round(X)) or (Ny == round(Y)) and (Dis =< Range) ->
+                    start(Client);
+                true ->
+                    loop(Client, X, Y, Dx, Dy, MaxBomb, CurBomb, Range)
+            end;
         {run} ->
             game_manager ! {player_state, Client, X+Dx/10, Y+Dy/10, Dx, Dy},
             loop(Client, X+Dx/10, Y+Dy/10, Dx, Dy, MaxBomb, CurBomb, Range)

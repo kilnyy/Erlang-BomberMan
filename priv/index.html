@@ -39,7 +39,6 @@
       this.bang = function() {
         this.fire = true;
         setTimeout(function(id) {
-          console.log(id);
           delete bombs[id];
         }, 500, this.id);
       }
