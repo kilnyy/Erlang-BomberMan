@@ -1,5 +1,3 @@
-%% Feel free to use, reuse and abuse the code in this file.
-
 %% @private
 -module(bomber_sup).
 -behaviour(supervisor).

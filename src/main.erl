@@ -15,7 +15,7 @@ loop(Clients) ->
             game_manager ! {disconnect, Client},
             loop(gb_sets:delete(Client, Clients));
         {message, Client, Msg} ->
-            Params = json:decode(Msg),
+            Params = mochijson2:decode(Msg),
             io:format("receive: ~p~n", [Params]),
             case Params of
                 [<<"player">>, <<"move">>, _X, _Y, _Dx, _Dy, _TimeStamp] ->
@@ -33,7 +33,7 @@ current() ->
     H * 1000000 * 1000 + S * 1000 + (M div 1000).
 
 emit(Client, Msg) ->
-    Client ! {self(), json:encode(Msg ++ [current()])}.
+    Client ! {self(), mochijson2:encode(Msg ++ [current()])}.
 
 broadcast([], _Msg) ->
     ok;

@@ -1,14 +1,13 @@
-%% Feel free to use, reuse and abuse the code in this file.
-
 {application, bomber, [
 	{description, "erlang bomber game."},
-	{vsn, "1"},
+	{vsn, "0.0.1"},
 	{modules, []},
 	{registered, [bomber_sup]},
 	{applications, [
 		kernel,
 		stdlib,
-		cowboy
+		cowboy,
+        mochijson2
 	]},
 	{mod, {bomber_app, []}},
 	{env, []}
