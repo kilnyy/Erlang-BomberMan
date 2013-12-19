@@ -24,7 +24,7 @@ websocket_init(_TransportName, Req, _Opts) ->
 
 websocket_handle({text, Msg}, Req, State) ->
 	%%{reply, {text, << "server received: ", Msg/binary >>}, Req, State};
-    manager ! {message, self(), Msg},
+    manager ! {message, self(), mochijson2:decode(Msg)},
     {ok, Req, State};
 
 websocket_handle(_Data, Req, State) ->
@@ -34,7 +34,7 @@ websocket_info({timeout, _Ref, Msg}, Req, State) ->
 	{reply, {text, Msg}, Req, State};
 
 websocket_info({_Ref, Msg}, Req, State) ->
-	{reply, {text, Msg}, Req, State};
+	{reply, {text, mochijson2:encode(Msg)}, Req, State};
 
 websocket_info(_Info, Req, State) ->
 	{ok, Req, State}.

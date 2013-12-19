@@ -1,7 +1,7 @@
 <html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-    <title>Websocket client</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Bomber</title>
     <script src="/static/jquery.min.js"></script>
     <script type="text/javascript">
       
@@ -53,11 +53,29 @@
       this.dy = dy;
       players[this.id] = this;
 
+      this.check = function(nx, ny) {
+        for (var i in bombs) {
+          //hereherehere
+          if (Math.abs(bombs[i].x - nx) < 0.5 && Math.abs(bombs[i].y - ny) < 0.5) return false;
+        }
+        return true;
+      }
+
       this.run = function() {
-        this.x = this.x + this.dx * interval / 1000;
-        this.y = this.y + this.dy * interval / 1000;
+        var nx = this.x + this.dx * interval / 1000;
+        var ny = this.y + this.dy * interval / 1000;
+        if (this == player && this.check(nx, ny)
+            || (Math.round(this.x) == Math.round(nx) 
+                && Math.round(this.y) == Math.round(ny)
+                && !this.check(this.x, this.y))) {
+          this.x = nx;
+          this.y = ny;
+        }
         context.fillStyle="#eee";
-        context.fillRect(this.x*grid + width/2 - grid/2, this.y*grid + height/2 - grid/2, grid, grid);
+        var player_width = grid/2;
+        var player_height = grid;
+        context.fillRect(this.x*grid + width/2 - player_width/2, 
+                         this.y*grid + height/2 - player_height, player_width, player_height);
       }
 
       this.move = function(dx, dy, x, y, timestamp) {
@@ -111,8 +129,8 @@
 
       var run = function() {
           drawBackground();
-          for (var i in players) players[i].run();
           for (var i in bombs) bombs[i].run();
+          for (var i in players) players[i].run();
           drawFrontground();
       }
       var stop = setInterval(run, interval);
