@@ -15,6 +15,7 @@
     var interval = 20;
     var delayTime = 0;
     var death = -1;
+    var player = null;
 
     function Bomb(id, x, y, r) {
       this.id = id;
@@ -55,7 +56,6 @@
 
       this.check = function(nx, ny) {
         for (var i in bombs) {
-          //hereherehere
           if (Math.abs(bombs[i].x - nx) < 0.5 && Math.abs(bombs[i].y - ny) < 0.5) return false;
         }
         return true;
@@ -64,13 +64,12 @@
       this.run = function() {
         var nx = this.x + this.dx * interval / 1000;
         var ny = this.y + this.dy * interval / 1000;
-        if (this == player && this.check(nx, ny)
+        if (this != player || this.check(nx, ny)
             || (Math.round(this.x) == Math.round(nx) 
-                && Math.round(this.y) == Math.round(ny)
-                && !this.check(this.x, this.y))) {
+                && Math.round(this.y) == Math.round(ny))) {
           this.x = nx;
           this.y = ny;
-        }
+        } else findDirection();
         context.fillStyle="#eee";
         var player_width = grid/2;
         var player_height = grid;
@@ -187,8 +186,12 @@
         var dx = data[5]; 
         var dy = data[6];
         var timestamp = data[7];
-        if (players[id]) players[id].move(dx, dy, x, y, timestamp);
-        else new Player(id, x, y, dx, dy);
+        if (players[id]) {
+           if (player!=players[id])
+             players[id].move(dx, dy, x, y, timestamp);
+           else if (Math.abs(player.x-x)>0.2 || Math.abs(player.y-y)>0.2)
+             findDirection();
+        } else new Player(id, x, y, dx, dy);
       }
       if (data[0] == 'player' && data[1] == 'init') {
         death ++;
@@ -238,7 +241,6 @@
       dy *= 5;
       send(["player", "move", player.x, player.y, dx, dy]);
       player.move(dx, dy);
-      //setTimeout(player.move(dx, dy), 40);
     }
 
     document.onkeydown = function(event) {
