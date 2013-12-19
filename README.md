@@ -1,6 +1,6 @@
 Bomber
 =================
-It's a web-game support multi-platform.
+It's a classical web-game.
 
 Introduction
 -----------------
@@ -23,3 +23,5 @@ To start the release in the foreground:
     $ ./_rel/bin/websocket_example console
 
 Then point your browser at [http://localhost:2333](http://localhost:2333).
+
+You can also try online demo on [http://bomber.kilnyy.org](http://bomber.kilnyy.org).
