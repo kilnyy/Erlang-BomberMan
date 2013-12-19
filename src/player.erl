@@ -7,7 +7,7 @@ start(Client) ->
     loop(Client, 0, 0, 0, 0, 4, 0, 3).
 
 move(Client, Nx, Ny, NDx, NDy, MaxBomb, CurBomb, Range, Delta) when abs(Delta) < 0.001 ->
-    game_manager ! {player_state, Client, Nx, Ny, NDx, NDy},
+    game_manager ! {player_state, Client, Nx, Ny, 0, 0},
     loop(Client, Nx, Ny, NDx, NDy, MaxBomb, CurBomb, Range);
 move(Client, Nx, Ny, NDx, NDy, MaxBomb, CurBomb, Range, Delta) ->
     Rx = Nx + NDx * Delta / 1000,
@@ -55,7 +55,7 @@ loop(Client, X, Y, Dx, Dy, MaxBomb, CurBomb, Range) ->
                     game_manager ! {player_state, Client, Nx, Ny, Dx, Dy},
                     loop(Client, Nx, Ny, Dx, Dy, MaxBomb, CurBomb, Range);
                 true ->
-                    game_manager ! {player_state, Client, X, Y, Dx, Dy},
+                    game_manager ! {player_state, Client, X, Y, 0, 0},
                     loop(Client, X, Y, Dx, Dy, MaxBomb, CurBomb, Range)
             end
     end.

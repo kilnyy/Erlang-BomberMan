@@ -70,11 +70,10 @@ check_block(X, Y) ->
 check_bomb(X, Y, Nx, Ny, Range) ->
     Max = max(abs(Nx-X), abs(Ny-Y)),
     Min = min(abs(Nx-X), abs(Ny-Y)),
-    (Min < 1) and (Max < Range + 1).
+    (Min < 0.5) and (Max < Range + 0.5).
 
 check_move(X, Y, Nx, Ny) ->
-    game_manager:check_block(Nx, Ny) orelse 
-    not ((round(X)==round(Nx)) andalso round(Y)==round(Ny) andalso game_manager:check_block(X, Y)).
+    game_manager:check_block(Nx, Ny) orelse ((round(X)==round(Nx)) andalso round(Y)==round(Ny)).
 
 id(Pid) ->
     list_to_binary(pid_to_list(Pid)).
