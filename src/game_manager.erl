@@ -8,6 +8,7 @@ start() ->
     game_state(clientsDict, dict:new()),
     game_state(bombs, dict:new()),
     game_state(blocks, dict:new()),
+    game_state(names, dict:new()),
     loop().
 
 loop() ->
@@ -16,11 +17,14 @@ loop() ->
     receive
         {connect, Client} ->
             Player = spawn(player, start, [Client]),
+            dict:map(fun({X, Y}, Bomb) -> main:emit(Client, [<<"bomb">>, <<"set">>, id(Bomb), X, Y, 4]) end, Bombs),
+            dict:map(fun(TClient, Name) -> main:emit(Client, [<<"name">>, id(TClient), Name]) end, game_state(names)),
             game_state(clientsDict, dict:store(Client, Player, ClientsDict));
         {disconnect, Client} ->
             Clients = dict:fetch_keys(ClientsDict),
             Msg = [<<"disconnect">>, id(Client)],
             main:broadcast(Clients, Msg),
+            game_state(names, dict:erase(Client, game_state(names))),
             game_state(clientsDict, dict:erase(Client, ClientsDict));
 
         %% From Client
@@ -30,6 +34,12 @@ loop() ->
         {bomb, Client, Params} ->
             Player = dict:fetch(Client, ClientsDict),
             Player ! {bomb, set, tl(Params)};
+        {name, Client, Params} ->
+            [Name | _] = Params,
+            Clients = dict:fetch_keys(ClientsDict),
+            Msg = [<<"name">>, id(Client), Name],
+            game_state(names, dict:store(Client, Name, game_state(names))),
+            main:broadcast(Clients, Msg);
         
         %% From Server
         {player_state, Client, X, Y, Dx, Dy} ->

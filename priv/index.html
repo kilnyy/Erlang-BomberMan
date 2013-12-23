@@ -9,9 +9,11 @@
     $(document).ready(init);
     var players = {};
     var bombs = {};
-    var grid = 40;
-    var width = 800;
-    var height = 600;
+    var grid = 30;
+    var limitX = 10;
+    var limitY = 10;
+    var width = limitX * grid * 2 + grid*2;
+    var height = limitY * grid * 2 + grid*3;
     var interval = 20;
     var delayTime = 0;
     var death = -1;
@@ -53,6 +55,7 @@
       this.y = y;
       this.dx = dx;
       this.dy = dy;
+      this.name = "guest";
       this.isBlock = false;
       players[this.id] = this;
 
@@ -60,9 +63,6 @@
         for (var i in bombs) {
           if (Math.abs(bombs[i].x - nx) < 0.5 && Math.abs(bombs[i].y - ny) < 0.5) return false;
         }
-        var limitX = width / grid / 2;
-        var limitY = height / grid / 2;
-        if (Math.abs(nx) >= limitX - 1 || Math.abs(ny) >= limitY - 1) return false;
         return true;
       }
 
@@ -74,6 +74,10 @@
                 && Math.round(this.y) == Math.round(ny))) {
           this.x = nx;
           this.y = ny;
+          if (this.x < -limitX-0.45) this.x = -limitX-0.45;
+          if (this.x > limitX+0.45) this.x = limitX+0.45;
+          if (this.y < -limitY-0.45) this.y = -limitY-0.45;
+          if (this.y > limitY+0.45) this.y = limitY+0.45;
           if (this == player && this.isBlock) {
             this.isBlock = false;
             findDirection();
@@ -85,8 +89,13 @@
         context.fillStyle="#eee";
         var player_width = grid/2;
         var player_height = grid;
-        context.fillRect(this.x*grid + width/2 - player_width/2, 
-                         this.y*grid + height/2 - player_height, player_width, player_height);
+        var tx = this.x*grid + width/2 - player_width/2;
+        var ty = this.y*grid + height/2 - player_height;
+        context.textAlign = 'center';
+        context.textBaseline = 'bottom';
+        context.font="14px Arial";
+        context.fillText(this.name, tx, ty);
+        context.fillRect(tx - player_width/2, ty, player_width, player_height);
       }
 
       this.move = function(dx, dy, x, y, timestamp) {
@@ -103,9 +112,9 @@
             this.dx = (nx - this.x)/0.5;
             this.dy = (ny - this.y)/0.5;
             var speed = Math.sqrt(this.dx*this.dx + this.dy*this.dy);
-            if (speed > 0.001 && speed < 2) {
-              this.dx = this.dx / speed * 2;
-              this.dy = this.dy / speed * 2;
+            if (speed > 0.001 && speed < 3) {
+              this.dx = this.dx / speed * 3;
+              this.dy = this.dy / speed * 3;
             }
           } else {
             this.x = nx;
@@ -116,6 +125,11 @@
     }
     
     function init() {
+
+      $("input[name='name']").keyup(function(event) {
+          send(["name", $("input[name='name']").val()]);
+      });
+
       if(!("WebSocket" in window)){  
         console.log("websocket do not support");
       } else {
@@ -133,6 +147,8 @@
       }
 
       function drawFrontground() {
+        context.textAlign = 'start';
+        context.textBaseline = 'alphabetic';
         context.font="30px Arial";
         context.fillStyle = '#fff';
         context.fillText("Death: " + Math.max(death, 0), 20, 40);
@@ -191,6 +207,13 @@
         var id = data[1];
         delete players[id];
       }
+      if (data[0] == 'name') {
+        var id = data[1];
+        var name = data[2];
+        if (!players[id])
+          new Player(id, 0, 0, 0, 0);
+        players[id].name = name;
+      }
       if (data[0] == 'player' && data[1] == 'move') {
         var id = data[2]; 
         var x = data[3]; 
@@ -206,7 +229,6 @@
         } else new Player(id, x, y, dx, dy);
       }
       if (data[0] == 'player' && data[1] == 'init') {
-        console.log(lastInitTime);
         if (lastInitTime > curTime() - 1000) return;
         lastInitTime = curTime();
         death ++;
@@ -253,36 +275,38 @@
         if (op == code('S')) dy = 1;
       }
 
-      dx *= 2;
-      dy *= 2;
+      dx *= 3;
+      dy *= 3;
       send(["player", "move", player.x, player.y, dx, dy]);
       player.move(dx, dy);
     }
 
-    document.onkeydown = function(event) {
+    $(document).keydown(function(event) {
       if ($.inArray(event.which, pressed) != -1) return;
       if (event.which != code('A') && event.which != code('S')
           && event.which != code('D') && event.which != code('W'))
         return;
       pressed.push(event.which);
       findDirection();
-    }
+    });
 
-    document.onkeypress = function(event) {
+    $(document).keypress(function(event) {
       if (event.which == code(' '))
         send(["bomb", "set", Math.round(player.x), Math.round(player.y)]);
-    }
+    });
 
-    document.onkeyup = function(event) {
+    $(document).keyup(function(event) {
       if ($.inArray(event.which, pressed) == -1) return;
       pressed.splice( $.inArray(event.which, pressed), 1);
       findDirection();
-    }
+    });
 
     </script>
   </head>
 
   <body style="  margin: 50px auto;width: 800px; ">
+    <label for="name">name</label>
+    <input type="text" name="name" maxlength="10" value="guest"/>
     <canvas id="canvas"></canvas>
   </body>
 </html> 

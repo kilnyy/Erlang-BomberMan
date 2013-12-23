@@ -17,6 +17,8 @@ loop(Clients) ->
         {message, Client, Params} ->
             io:format("receive: ~p~n", [Params]),
             case Params of
+                [<<"name">>, _Name, _TimeStamp] ->
+                    game_manager ! {name, Client, tl(Params)};
                 [<<"player">>, <<"move">>, _X, _Y, _Dx, _Dy, _TimeStamp] ->
                     game_manager ! {player, Client, tl(Params)};
                 [<<"bomb">>, <<"set">>, _X, _Y, _Timestamp] ->
