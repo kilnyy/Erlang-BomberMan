@@ -233,7 +233,11 @@
         lastInitTime = curTime();
         death ++;
         var id = data[2];
-        player = new Player(id, 0, 0, 0, 0);
+        if (!player) {
+          player = new Player(id, 0, 0, 0, 0);
+        } else {
+          player.x = player.y = player.dx = player.dy = 0;
+        }
         delayTime = 0;
         send(['time']);
       }
@@ -249,6 +253,7 @@
         bombs[id].bang();
       }
       if (data[0] == 'time') {
+        delayTime = 0;
         delayTime = parseInt(data[2] - curTime()*0.5 - data[1]*0.5);
         console.log("delay:" + delayTime);
       }
