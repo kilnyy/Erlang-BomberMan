@@ -1,7 +1,8 @@
 <html>
   <head>
+    <link href="/static/favicon.ico" rel="shortcut icon">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Bomber</title>
+    <title>BomberMan</title>
     <script src="/static/jquery.min.js"></script>
     <script type="text/javascript">
       
@@ -9,13 +10,22 @@
     $(document).ready(init);
     var players = {};
     var bombs = {};
-    var grid = 20;
-    var width = 800;
-    var height = 600;
+    var grid = 25;
+    var limitX = 10;
+    var limitY = 10;
+    var width = limitX * grid * 2 + grid*2;
+    var height = limitY * grid * 2 + grid*3;
     var interval = 20;
     var delayTime = 0;
     var death = -1;
     var player = null;
+    var lastInitTime = 0;
+    var bot = null;
+
+    var playerColor = "78cfef";
+    playerColor = "0070aa";
+    var bombColor = "f83d4f";
+    var fontColor = "333";
 
     function Bomb(id, x, y, r) {
       this.id = id;
@@ -27,13 +37,13 @@
 
       this.run = function() {
         if (!this.fire) {
-          context.fillStyle="e00";
+          context.fillStyle=bombColor;
           context.beginPath();
           context.arc(this.x*grid + width/2, this.y*grid + height/2, grid/2, 0, Math.PI*2, true); 
           context.closePath();
           context.fill();
         } else {
-          context.fillStyle="e00";
+          context.fillStyle=bombColor;
           context.fillRect((this.x-this.r)*grid + width/2 - grid/2, this.y*grid + height/2 - grid/2, grid*(2*this.r+1), grid);
           context.fillRect(this.x*grid + width/2 - grid/2, (this.y-this.r)*grid + height/2 - grid/2, grid, grid*(2*this.r+1));
         }
@@ -52,6 +62,8 @@
       this.y = y;
       this.dx = dx;
       this.dy = dy;
+      this.name = "guest";
+      this.isBlock = false;
       players[this.id] = this;
 
       this.check = function(nx, ny) {
@@ -69,12 +81,28 @@
                 && Math.round(this.y) == Math.round(ny))) {
           this.x = nx;
           this.y = ny;
-        } else findDirection();
-        context.fillStyle="#eee";
+          if (this.x < -limitX-0.45) this.x = -limitX-0.45;
+          if (this.x > limitX+0.45) this.x = limitX+0.45;
+          if (this.y < -limitY-0.45) this.y = -limitY-0.45;
+          if (this.y > limitY+0.45) this.y = limitY+0.45;
+          if (this == player && this.isBlock) {
+            this.isBlock = false;
+            findDirection();
+          }
+        } else if (this == player && !this.isBlock) {
+          send(["player", "move", player.x, player.y, 0, 0]);
+          this.isBlock = true;
+        }
+        context.fillStyle=playerColor;
         var player_width = grid/2;
         var player_height = grid;
-        context.fillRect(this.x*grid + width/2 - player_width/2, 
-                         this.y*grid + height/2 - player_height, player_width, player_height);
+        var tx = this.x*grid + width/2 - player_width/2;
+        var ty = this.y*grid + height/2 - player_height;
+        context.textAlign = 'center';
+        context.textBaseline = 'bottom';
+        context.font="14px Arial";
+        context.fillText(this.name, tx, ty);
+        context.fillRect(tx - player_width/2, ty, player_width, player_height);
       }
 
       this.move = function(dx, dy, x, y, timestamp) {
@@ -85,15 +113,15 @@
           var nx = x + dx * (cur - timestamp) / 1000;
           var ny = y + dy * (cur - timestamp) / 1000;
           var dis = (nx-this.x)*(nx-this.x) + (ny-this.y)*(ny-this.y);
-          if (dis <= 9 && dis >= 0.1) {
+          if (dis <= 1 && dis >= 0.01) {
             nx = x + dx * (cur - timestamp + 500) / 1000;
             ny = y + dy * (cur - timestamp + 500) / 1000;
             this.dx = (nx - this.x)/0.5;
             this.dy = (ny - this.y)/0.5;
             var speed = Math.sqrt(this.dx*this.dx + this.dy*this.dy);
-            if (speed > 0.001 && speed < 5) {
-              this.dx = this.dx / speed * 5;
-              this.dy = this.dy / speed * 5;
+            if (speed > 0.001 && speed < 3) {
+              this.dx = this.dx / speed * 3;
+              this.dy = this.dy / speed * 3;
             }
           } else {
             this.x = nx;
@@ -104,6 +132,19 @@
     }
     
     function init() {
+
+      $("input[name='name']").keyup(function(event) {
+          var name = $("input[name='name']").val();
+          if (name == 'bot' && !bot) {
+            bot = setInterval(bot_ai, 1000/3);
+          }
+          if (name != 'bot' && bot) {
+            clearInterval(bot);
+            bot = null;
+          }
+          send(["name", name]);
+      });
+
       if(!("WebSocket" in window)){  
         console.log("websocket do not support");
       } else {
@@ -116,14 +157,25 @@
 
       function drawBackground() {
         context.clearRect(0, 0, width, height);
-        context.fillStyle="#000";
-        context.fillRect(0, 0, width, height);
+        context.globalAlpha=0.8;
+        context.strokeStyle=fontColor;
+        context.lineWidth=4;
+        context.strokeRect(0, 0, width, height);
+        context.globalAlpha=1.0;
       }
 
       function drawFrontground() {
+        context.globalAlpha=0.8;
+        context.textAlign = 'left';
+        context.textBaseline = 'top';
         context.font="30px Arial";
-        context.fillStyle = '#fff';
-        context.fillText("Death: " + Math.max(death, 0), 20, 40);
+        context.fillStyle = fontColor;
+        context.fillText("Death: " + Math.max(death, 0), 15, 15);
+        context.font="20px Arial";
+        context.textAlign = 'right';
+        context.fillText("W,S,A,D to move", width - 30, 15);
+        context.fillText("spacebar to plant bombs", width - 30, 45);
+        context.globalAlpha=1.0;
       }
 
       var run = function() {
@@ -133,6 +185,7 @@
           drawFrontground();
       }
       var stop = setInterval(run, interval);
+      $("body").width(width);
       canvas.width = width;
       canvas.height = height;
     };
@@ -179,6 +232,13 @@
         var id = data[1];
         delete players[id];
       }
+      if (data[0] == 'name') {
+        var id = data[1];
+        var name = data[2];
+        if (!players[id])
+          new Player(id, 0, 0, 0, 0);
+        players[id].name = name;
+      }
       if (data[0] == 'player' && data[1] == 'move') {
         var id = data[2]; 
         var x = data[3]; 
@@ -189,14 +249,21 @@
         if (players[id]) {
            if (player!=players[id])
              players[id].move(dx, dy, x, y, timestamp);
-           else if (Math.abs(player.x-x)>0.2 || Math.abs(player.y-y)>0.2)
+           else if (Math.abs(player.x-x)>0.4 || Math.abs(player.y-y)>0.4)
              findDirection();
         } else new Player(id, x, y, dx, dy);
       }
       if (data[0] == 'player' && data[1] == 'init') {
+        if (lastInitTime > curTime() - 1000) return;
+        lastInitTime = curTime();
         death ++;
         var id = data[2];
-        player = new Player(id, 0, 0, 0, 0);
+        if (!player) {
+          player = new Player(id, 0, 0, 0, 0);
+        } else {
+          player.x = player.y = player.dx = player.dy = 0;
+        }
+        delayTime = 0;
         send(['time']);
       }
       if (data[0] == 'bomb' && data[1] == 'set') {
@@ -211,6 +278,7 @@
         bombs[id].bang();
       }
       if (data[0] == 'time') {
+        delayTime = 0;
         delayTime = parseInt(data[2] - curTime()*0.5 - data[1]*0.5);
         console.log("delay:" + delayTime);
       }
@@ -237,36 +305,50 @@
         if (op == code('S')) dy = 1;
       }
 
-      dx *= 5;
-      dy *= 5;
+      dx *= 3;
+      dy *= 3;
       send(["player", "move", player.x, player.y, dx, dy]);
       player.move(dx, dy);
     }
 
-    document.onkeydown = function(event) {
+    $(document).keydown(function(event) {
       if ($.inArray(event.which, pressed) != -1) return;
       if (event.which != code('A') && event.which != code('S')
           && event.which != code('D') && event.which != code('W'))
         return;
       pressed.push(event.which);
       findDirection();
-    }
+    });
 
-    document.onkeypress = function(event) {
+    $(document).keypress(function(event) {
       if (event.which == code(' '))
         send(["bomb", "set", Math.round(player.x), Math.round(player.y)]);
-    }
+    });
 
-    document.onkeyup = function(event) {
+    $(document).keyup(function(event) {
       if ($.inArray(event.which, pressed) == -1) return;
       pressed.splice( $.inArray(event.which, pressed), 1);
       findDirection();
+    });
+
+    Array.prototype.randomchoice = function () {
+      return this[Math.floor(Math.random() * this.length)]
+    }
+
+    function bot_ai() {
+      pressed = [[code('A'), code('S'), code('D'), code('W')].randomchoice()];
+      findDirection();
+      if ([true, false, false].randomchoice())
+        send(["bomb", "set", Math.round(player.x), Math.round(player.y)]);
     }
 
     </script>
   </head>
 
   <body style="  margin: 50px auto;width: 800px; ">
+    <h2 align="center" color="#333">BomberMan</h2>
+    <label for="name" color="#333">Name</label>
+    <input type="text" name="name" maxlength="10" value="guest"/>
     <canvas id="canvas"></canvas>
   </body>
 </html> 
