@@ -9,13 +9,14 @@
     $(document).ready(init);
     var players = {};
     var bombs = {};
-    var grid = 20;
+    var grid = 40;
     var width = 800;
     var height = 600;
     var interval = 20;
     var delayTime = 0;
     var death = -1;
     var player = null;
+    var lastInitTime = 0;
 
     function Bomb(id, x, y, r) {
       this.id = id;
@@ -52,12 +53,16 @@
       this.y = y;
       this.dx = dx;
       this.dy = dy;
+      this.isBlock = false;
       players[this.id] = this;
 
       this.check = function(nx, ny) {
         for (var i in bombs) {
           if (Math.abs(bombs[i].x - nx) < 0.5 && Math.abs(bombs[i].y - ny) < 0.5) return false;
         }
+        var limitX = width / grid / 2;
+        var limitY = height / grid / 2;
+        if (Math.abs(nx) >= limitX - 1 || Math.abs(ny) >= limitY - 1) return false;
         return true;
       }
 
@@ -69,7 +74,14 @@
                 && Math.round(this.y) == Math.round(ny))) {
           this.x = nx;
           this.y = ny;
-        } else findDirection();
+          if (this == player && this.isBlock) {
+            this.isBlock = false;
+            findDirection();
+          }
+        } else if (this == player && !this.isBlock) {
+          send(["player", "move", player.x, player.y, 0, 0]);
+          this.isBlock = true;
+        }
         context.fillStyle="#eee";
         var player_width = grid/2;
         var player_height = grid;
@@ -85,15 +97,15 @@
           var nx = x + dx * (cur - timestamp) / 1000;
           var ny = y + dy * (cur - timestamp) / 1000;
           var dis = (nx-this.x)*(nx-this.x) + (ny-this.y)*(ny-this.y);
-          if (dis <= 9 && dis >= 0.1) {
+          if (dis <= 1 && dis >= 0.01) {
             nx = x + dx * (cur - timestamp + 500) / 1000;
             ny = y + dy * (cur - timestamp + 500) / 1000;
             this.dx = (nx - this.x)/0.5;
             this.dy = (ny - this.y)/0.5;
             var speed = Math.sqrt(this.dx*this.dx + this.dy*this.dy);
-            if (speed > 0.001 && speed < 5) {
-              this.dx = this.dx / speed * 5;
-              this.dy = this.dy / speed * 5;
+            if (speed > 0.001 && speed < 2) {
+              this.dx = this.dx / speed * 2;
+              this.dy = this.dy / speed * 2;
             }
           } else {
             this.x = nx;
@@ -189,14 +201,18 @@
         if (players[id]) {
            if (player!=players[id])
              players[id].move(dx, dy, x, y, timestamp);
-           else if (Math.abs(player.x-x)>0.2 || Math.abs(player.y-y)>0.2)
+           else if (Math.abs(player.x-x)>0.4 || Math.abs(player.y-y)>0.4)
              findDirection();
         } else new Player(id, x, y, dx, dy);
       }
       if (data[0] == 'player' && data[1] == 'init') {
+        console.log(lastInitTime);
+        if (lastInitTime > curTime() - 1000) return;
+        lastInitTime = curTime();
         death ++;
         var id = data[2];
         player = new Player(id, 0, 0, 0, 0);
+        delayTime = 0;
         send(['time']);
       }
       if (data[0] == 'bomb' && data[1] == 'set') {
@@ -237,8 +253,8 @@
         if (op == code('S')) dy = 1;
       }
 
-      dx *= 5;
-      dy *= 5;
+      dx *= 2;
+      dy *= 2;
       send(["player", "move", player.x, player.y, dx, dy]);
       player.move(dx, dy);
     }

@@ -1,6 +1,6 @@
 Bomber
 =================
-It's a classical web-game.
+It's a classical game's web version.
 
 Introduction
 -----------------

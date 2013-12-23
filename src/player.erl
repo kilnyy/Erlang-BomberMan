@@ -6,6 +6,10 @@ start(Client) ->
     game_manager ! {player_init, Client},
     loop(Client, 0, 0, 0, 0, 4, 0, 3).
 
+start(Client, CurBomb) ->
+    game_manager ! {player_init, Client},
+    loop(Client, 0, 0, 0, 0, 4, CurBomb, 4).
+
 move(Client, Nx, Ny, NDx, NDy, MaxBomb, CurBomb, Range, Delta) when abs(Delta) < 0.001 ->
     game_manager ! {player_state, Client, Nx, Ny, 0, 0},
     loop(Client, Nx, Ny, NDx, NDy, MaxBomb, CurBomb, Range);
@@ -42,7 +46,7 @@ loop(Client, X, Y, Dx, Dy, MaxBomb, CurBomb, Range) ->
             Ok = game_manager:check_bomb(X, Y, Nx, Ny, Range),
             if
                 Ok ->
-                    start(Client);
+                    start(Client, CurBomb);
                 true ->
                     loop(Client, X, Y, Dx, Dy, MaxBomb, CurBomb, Range)
             end;
