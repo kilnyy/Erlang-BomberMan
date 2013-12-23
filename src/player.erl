@@ -40,6 +40,17 @@ loop(Client, X, Y, Dx, Dy, MaxBomb, CurBomb, Range) ->
     receive
         {disconnect} ->
             ok;
+        {move, [NDx, NDy, TimeStamp]} ->
+            Cur = main:current(),
+            move(Client, X, Y, NDx, NDy, MaxBomb, CurBomb, Range, Cur-TimeStamp);
+        {bomb, set, [TimeStamp]} ->
+            if
+                MaxBomb > CurBomb ->
+                    spawn(bomb, start, [self(), round(X), round(Y), Range, TimeStamp]),
+                    loop(Client, X, Y, Dx, Dy, MaxBomb, CurBomb+1, Range);
+                true ->
+                    loop(Client, X, Y, Dx, Dy, MaxBomb, CurBomb, Range)
+            end;
         {move, [Nx, Ny, NDx, NDy, TimeStamp]} ->
             Cur = main:current(),
             move(Client, Nx, Ny, NDx, NDy, MaxBomb, CurBomb, Range, Cur-TimeStamp);

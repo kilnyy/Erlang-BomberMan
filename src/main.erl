@@ -15,8 +15,17 @@ loop(Clients) ->
             game_manager ! {disconnect, Client},
             loop(gb_sets:delete(Client, Clients));
         {message, Client, Params} ->
-            io:format("receive: ~p~n", [Params]),
+            %io:format("receive: ~p~n", [Params]),
             case Params of
+                %For bot
+                [<<"name">>, _Name] ->
+                    game_manager ! {name, Client, tl(Params) ++ [current()]};
+                [<<"player">>, <<"move">>, _Dx, _Dy] ->
+                    game_manager ! {player, Client, tl(Params) ++ [current()]};
+                [<<"bomb">>, <<"set">>] ->
+                    game_manager ! {bomb, Client, tl(Params) ++ [current()]}; 
+
+                %For client
                 [<<"name">>, _Name, _TimeStamp] ->
                     game_manager ! {name, Client, tl(Params)};
                 [<<"player">>, <<"move">>, _X, _Y, _Dx, _Dy, _TimeStamp] ->
