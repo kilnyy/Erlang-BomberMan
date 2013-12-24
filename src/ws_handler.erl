@@ -11,15 +11,8 @@ init({tcp, http}, _Req, _Opts) ->
 	{upgrade, protocol, cowboy_websocket}.
 
 websocket_init(_TransportName, Req, _Opts) ->
-    Manager = whereis(manager),
-    if 
-        Manager == undefined ->
-            register(manager, spawn(main, start, []));
-        true ->
-            ok
-    end,
     io:format("~p~p~n", ["new client connect ", self()]),
-    manager ! {connect, self()},
+    main:manager() ! {connect, self()},
 	{ok, Req, undefined_state}.
 
 websocket_handle({text, Msg}, Req, State) ->

@@ -1,6 +1,6 @@
 -module(main).
 
--export([start/0, emit/2, broadcast/2, current/0]).
+-export([start/0, emit/2, broadcast/2, current/0, manager/0]).
 
 start() ->
     register(game_manager, spawn(game_manager, start, [])),
@@ -52,3 +52,13 @@ broadcast([Client | Tail], Msg) ->
     broadcast(Tail, Msg);
 broadcast(Clients, Msg) ->
     broadcast(gb_sets:to_list(Clients), Msg).
+
+manager() ->
+    Manager = whereis(manager),
+    if 
+        Manager == undefined ->
+            register(manager, spawn(main, start, []));
+        true ->
+            ok
+    end,
+    manager.

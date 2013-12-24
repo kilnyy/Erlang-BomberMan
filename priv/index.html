@@ -22,10 +22,9 @@
     var lastInitTime = 0;
     var bot = null;
 
-    var playerColor = "78cfef";
-    playerColor = "0070aa";
+    var playerColor = "0070aa";
     var bombColor = "f83d4f";
-    var fontColor = "333";
+    var fontColor = "383d3d";
 
     function Bomb(id, x, y, r) {
       this.id = id;
@@ -157,15 +156,12 @@
 
       function drawBackground() {
         context.clearRect(0, 0, width, height);
-        context.globalAlpha=0.8;
         context.strokeStyle=fontColor;
         context.lineWidth=4;
         context.strokeRect(0, 0, width, height);
-        context.globalAlpha=1.0;
       }
 
       function drawFrontground() {
-        context.globalAlpha=0.8;
         context.textAlign = 'left';
         context.textBaseline = 'top';
         context.font="30px Arial";
@@ -175,7 +171,6 @@
         context.textAlign = 'right';
         context.fillText("W,S,A,D to move", width - 30, 15);
         context.fillText("spacebar to plant bombs", width - 30, 45);
-        context.globalAlpha=1.0;
       }
 
       var run = function() {
@@ -345,9 +340,9 @@
     </script>
   </head>
 
-  <body style="  margin: 50px auto;width: 800px; ">
-    <h2 align="center" color="#333">BomberMan</h2>
-    <label for="name" color="#333">Name</label>
+  <body style="  margin: 50px auto;width: 660px; background-color: f0f1eb; font:Arial; color: #383d3d;">
+    <h2 align="center">BomberMan</h2>
+    <label for="name">Name</label>
     <input type="text" name="name" maxlength="10" value="guest"/>
     <canvas id="canvas"></canvas>
   </body>

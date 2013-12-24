@@ -12,7 +12,9 @@ bots() ->
     end.
 
 add() -> 
-    put(bots, [spawn(fun() -> start() end) | bots()]).
+    put(bots, [spawn(fun() -> start() end) | bots()]),
+    bots().
+
 del() ->
     OldBots = bots(),
     if
@@ -22,10 +24,11 @@ del() ->
             put(bots, Bots);
         true ->
             io:format("no bots now.")
-    end.
+    end,
+    bots().
 
 start() -> 
-    manager ! {connect, self()},
+    main:manager() ! {connect, self()},
     name("Bot" ++ pid_to_list(self())),
     run(),
     loop().

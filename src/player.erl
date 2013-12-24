@@ -44,8 +44,9 @@ loop(Client, X, Y, Dx, Dy, MaxBomb, CurBomb, Range) ->
             Cur = main:current(),
             move(Client, X, Y, NDx, NDy, MaxBomb, CurBomb, Range, Cur-TimeStamp);
         {bomb, set, [TimeStamp]} ->
+            Ok = (MaxBomb > CurBomb) and (game_manager:check_block(X, Y)),
             if
-                MaxBomb > CurBomb ->
+                Ok ->
                     spawn(bomb, start, [self(), round(X), round(Y), Range, TimeStamp]),
                     loop(Client, X, Y, Dx, Dy, MaxBomb, CurBomb+1, Range);
                 true ->
@@ -55,8 +56,9 @@ loop(Client, X, Y, Dx, Dy, MaxBomb, CurBomb, Range) ->
             Cur = main:current(),
             move(Client, Nx, Ny, NDx, NDy, MaxBomb, CurBomb, Range, Cur-TimeStamp);
         {bomb, set, [Bx, By, TimeStamp]} ->
+            Ok = (MaxBomb > CurBomb) and (game_manager:check_block(X, Y)),
             if
-                MaxBomb > CurBomb ->
+                Ok ->
                     spawn(bomb, start, [self(), Bx, By, Range, TimeStamp]),
                     loop(Client, X, Y, Dx, Dy, MaxBomb, CurBomb+1, Range);
                 true ->
