@@ -1,6 +1,6 @@
-Bomber
+Erlang BomberMan
 =================
-Classical game BomberMan's web version.
+Classical game BomberMan's online version built with erlang and html5.
 
 Getting Start
 -----------------
@@ -12,7 +12,7 @@ To build the game, run the following command:
 
 To start the release in the foreground:
 
-    $ ./_rel/bin/bomber console
+    $ ./_rel/bin/bomberman console
 
 Then point your browser at [http://localhost:2333](http://localhost:2333).
 

@@ -1,0 +1,14 @@
+{application, bomberman, [
+	{description, "erlang bomberman."},
+	{vsn, "0.0.3"},
+	{modules, []},
+	{registered, [bomberman_sup]},
+	{applications, [
+		kernel,
+		stdlib,
+		cowboy,
+        mochijson2
+	]},
+	{mod, {bomberman_app, []}},
+	{env, []}
+]}.

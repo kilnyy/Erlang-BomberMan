@@ -1,4 +1,4 @@
-PROJECT = bomber
+PROJECT = bomberman
 
 DEPS = cowboy mochijson2
 dep_cowboy = pkg://cowboy master
