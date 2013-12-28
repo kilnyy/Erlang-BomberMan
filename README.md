@@ -1,14 +1,6 @@
 Bomber
 =================
-It's a classical game's web version.
-
-Introduction
------------------
-Server side use erlang based on [cowboy](https://github.com/extend/cowboy).
-
-Client side use html5 canvas to fixed multi-platform.
-
-Message transform with websocket.
+Classical game BomberMan's web version.
 
 Getting Start
 -----------------
@@ -20,7 +12,7 @@ To build the game, run the following command:
 
 To start the release in the foreground:
 
-    $ ./_rel/bin/websocket_example console
+    $ ./_rel/bin/bomber console
 
 Then point your browser at [http://localhost:2333](http://localhost:2333).
 

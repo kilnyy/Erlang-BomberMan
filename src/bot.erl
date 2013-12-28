@@ -42,6 +42,8 @@ set_bomb() ->
 name(Name) ->
     send([<<"name">>, list_to_binary(Name)]).
 
+
+%% run your own bot here
 run() ->
     X = random:uniform(15),
     if
@@ -57,6 +59,7 @@ run() ->
     end,
     erlang:send_after(500, self(), {run}).
     
+%% receive server message here
 loop() ->
     receive
         {die} -> manager ! {disconnect, self()};
